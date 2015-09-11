@@ -1,0 +1,13 @@
+*.DS_Store
+
+.DS_Store
+.buildout/
+
+*.egg-info/
+develop-eggs/
+.installed.cfg
+
+.*.swp
+*.pyc
+
+bin/
