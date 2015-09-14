@@ -53,8 +53,8 @@ class ComplexCLI(click.MultiCommand):
 @pass_context
 def cli(ctx, verbose):
     ctx.verbose = verbose
-    tracer.setLevel(logging.INFO if verbose else logging.WARNING)
-    tracer.addHandler(logging.StreamHandler(sys.stdout))
+    # tracer.setLevel(logging.INFO if verbose else logging.WARNING)
+    # tracer.addHandler(logging.StreamHandler(sys.stdout))
 
 
 def main():

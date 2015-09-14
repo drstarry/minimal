@@ -1,1 +1,2 @@
-from . import knn
+from . import train
+from . import test
