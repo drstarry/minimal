@@ -12,4 +12,7 @@ FEATURE_NUM = 9
 VALUES = 'box'
 
 # File number(k-fold crossvalidation)
-K = 6
+FOLD = 6
+
+# hyper parameters list
+K = [1, 2, 3, 4, 5]
