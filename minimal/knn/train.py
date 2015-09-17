@@ -34,7 +34,6 @@ def crossvalidation():
             test_labels = [d[-1] for d in test_data]
             _precision = measure(test_labels, trained_labels)
             precision += _precision
-            print 'precision: ', _precision
         avg_p = precision/FOLD
         k_measure.append((k, avg_p))
         print 'avg precision: ', avg_p
@@ -63,7 +62,7 @@ def knn(train_data, test_data, k):
 
 
 def XOR(x, y):
-    if x == y:
+    if x != y:
         return True
     else:
         return False

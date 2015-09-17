@@ -1,6 +1,5 @@
 # coding: utf-8
 
-from operator import xor
 import time
 
 from const import CUR_FOLDER, FILE_FOLDER, FILE_TEST, FILE_TRAIN, FEATURE_NUM, FOLD
