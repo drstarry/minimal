@@ -68,12 +68,12 @@ class DecisionTree:
 
     def __init__(self, data):
         self.data = data
-        print '\nStart building decision tree:\n'
+        print 'Start building decision tree:'
         self.root = self.build_tree(data[:], range(FEATURE_NUM)[:], {})
-        print '\nEnd building decision\n'
+        print 'End building decision'
 
     def build_tree(self, data, features, tree):
-        print 'Current features: %i\n' % len(features)
+        print 'Current features: %i' % len(features)
         print 'Size of instances to be trained: %i' % len(data)
         if len(features) == 1:
             terminate, combination = self.perfectly_classified(data, features[0])
@@ -83,11 +83,11 @@ class DecisionTree:
                 return tree
         subtree = {}
         feature = get_best_feature(data[:], features)
-        print 'Choose best feature: %i\n' % feature
+        print 'Choose best feature: %i' % feature
         features.remove(feature)
         subsets = classify(data[:], feature)
         for value, subdata in subsets:
-            if not subdata:
+            if not subdata or not features:
                 subtree[value] = {'label': self.assign_label(data[:]),
                                   'is_leaf': True}
             else:
@@ -140,4 +140,6 @@ def train_decision_tree():
     return DecisionTree(data)
 
 if __name__ == "__main__":
-    train_decision_tree()
+    root = train_decision_tree().root
+    import IPython
+    IPython.embed()

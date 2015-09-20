@@ -27,9 +27,13 @@ def meature(test_labels, trained_labels):
 
 
 def test():
+    import time
+    start = time.time()
     test_data, test_labels = get_data()
     tree = train_decision_tree()
     trained_labels = tree.get_trained_labels(test_data)
+    end = time.time()
+    print 'training time(s): ', end-start
     score = meature(test_labels, trained_labels)
     print 'precison: ', score
 
