@@ -78,6 +78,25 @@ def train_pair(j, data, w, r=1, mu=0, agg=False):
        agg -> if this is a aggressive perceptron
     """
     mistake = 0
+    for label, feature in data:
+        if label*(dot_prod(w, feature)) <= mu:
+            mistake += 1
+            if agg:
+                rate = learning_rate(mu=mu, w=w, label=label, feature=feature)
+            else:
+                rate = r
+            update_weight(weight=w, r=rate, feature=feature, label=label)
+    return w, mistake
+
+
+def train_pair_avg(j, data, w, r=1, mu=0, agg=False):
+    """mu -> margin
+       r -> learning rate
+       j -> feature number
+       agg -> if this is a aggressive perceptron
+       This is a average perceptron
+    """
+    mistake = 0
     a = w
     for label, feature in data:
         if label*(dot_prod(w, feature)) <= mu:
@@ -87,7 +106,7 @@ def train_pair(j, data, w, r=1, mu=0, agg=False):
             else:
                 rate = r
             update_weight(weight=w, r=rate, feature=feature, label=label)
-            a = verctor_add(a, w)
+        a = verctor_add(a, w)
     return a, mistake
 
 
@@ -107,24 +126,45 @@ def learning_rate(mu, w, label, feature):
     return (mu-label*(dot_prod(w, feature)))/(dot_prod(feature, feature)+1)
 
 
-def train_batch(data_all, mu, r, epoch=EPOCH, agg=False):
+def train_batch(data_all, r, mu=0, epoch=EPOCH, agg=False):
+    mistakes = [[[0 for _ in FEATURE_NUM] for _ in FILE_NUM] for _ in range(2)]
+    precisions = [[[0 for _ in FEATURE_NUM] for _ in FILE_NUM] for _ in range(2)]
     for i in FILE_NUM:
         for j in FEATURE_NUM:
             data = data_all[(i, j)]
             train_data = data['train']
             w = prepare_weight(j)
+            mistake_all = 0
+            for _ in range(epoch):
+                shuffle(train_data)
+                _w, mistake = train_pair(data=train_data, j=j,
+                                             r=r, w=w, agg=agg)
+                mistake_all += mistake
+                w = verctor_add(w, _w)
+            mistake_all /= epoch
+            print i, j
+            mistakes[0][i][j/10-1] = int(mistake_all)
+            precision = test_pair(data=data['test'], j=j, w=w)
+            precisions[0][i][j/10-1] = precision
+            print 'data %i, feature number %i, mu %f, train mistake %i, ' \
+                  'precision %f' \
+                % (i, j, mu, mistake_all, precision)
+            w = prepare_weight(j)
             mistake_all = 0.0
             for _ in range(epoch):
                 shuffle(train_data)
                 _w, mistake = train_pair(mu=mu, data=train_data, j=j,
-                                         r=1, w=w, agg=agg)
+                                         r=r, w=w, agg=agg)
                 mistake_all += mistake
                 w = verctor_add(w, _w)
             mistake_all /= epoch
             precision = test_pair(mu=mu, data=data['test'], j=j, w=w)
-            print 'data %i, feature number %i, mu %f, train mistake %i,' \
-                  ', precision %f' \
+            print 'data %i, feature number %i, mu %f, train mistake %i, ' \
+                  'precision %f' \
                 % (i, j, mu, mistake_all, precision)
+            mistakes[1][i][j/10-1] = int(mistake_all)
+            precisions[1][i][j/10-1] = precision
+    return mistakes, precisions
 
 
 def split_data(data):
@@ -182,24 +222,26 @@ def exp_2(data_all, j=10, i=0, agg=False):
     result = defaultdict(list)
 
     r = cv_simple(data['train'])
-    print 'best learning rate: ', r
+    if not agg:
+        print 'best learning rate: ', r
     w = prepare_weight(j=j)
     w, mistake_train = train_pair(data=data['train'], r=r,
                                   w=w, j=j, agg=agg)
     precision = test_pair(data=data['test'], j=j, w=w)
     result['simple'].append((r, mistake_train, precision))
-    print 'data %i, feature number %i, learning rate %f,' \
+    print 'simple perceptron:\ndata %i, feature number %i,' \
           ' update times %i, precision %f' \
-        % (i, j, r, mistake_train, precision)
+        % (i, j, mistake_train, precision)
 
     r, mu = cv_margin(data['train'])
-    print 'best learning rate and margin: ', r, mu
+    if not agg:
+        print 'best learning rate and margin: ', r, mu
     w = prepare_weight(j=j)
     w, mistake_train = train_pair(mu=mu, data=data['train'], r=r, j=j, w=w, agg=agg)
     precision = test_pair(data=data['test'], j=j, w=w)
     result['margin'].append((r, mu, mistake_train, precision))
-    print 'data %i, feature number %i, learning rate %f, mu %f, ' \
-          'update times %i, precision %f' % (i, j, r, mu, mistake_train, precision)
+    print 'margin perceptron:\ndata %i, feature number %i,' \
+          ' update times %i, precision %f' % (i, j, mistake_train, precision)
     return result
 
 
@@ -207,22 +249,28 @@ def exp_1(data, agg=False):
     weight, mistake_train = train_pair(data=data, j=4, w=prepare_weight(4),
                                        agg=agg)
     print 'weight(first item is bias): ', weight
-    print 'number of mistake: ', mistake_train
+    print 'number of mistakes: ', mistake_train
 
 
 def train():
     data = prepare_data()
     data_try = prepare_data_try()
 
-    # fixed learning rate:
+    print '\n--------fixed learning rate--------'
+    print '--------question 1--------'
     exp_1(data_try)
-    # exp_2(data)
-    # result = train_batch(data, mu=0.01, r=1)
+    print '--------question 2--------'
+    exp_2(data)
+    print '--------question 3--------'
+    mistakes, precisions = train_batch(data, mu=0.1, r=0.8, agg=False)
 
-    # aggressive learning rate
-    # exp_1(data_try, agg=True)
-    # exp_2(data, agg=True)
-    # train_batch(data, agg=True)
+    print '\n--------aggressive learning rate--------'
+    print '--------question 1--------'
+    exp_1(data_try, agg=True)
+    print '--------question 2--------'
+    exp_2(data, agg=True)
+    print '--------question 3--------'
+    mistakes, precisions = train_batch(data, mu=0.1, r=0.8)
 
 if __name__ == "__main__":
     train()
