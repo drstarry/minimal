@@ -7,8 +7,7 @@ from setuptools import setup, find_packages
 install_requires = [
     'click',
     'numpy',
-    # 'scipy',
-    # 'pandas',
+    'matplotlib'
 ]
 
 entry_points = '''
